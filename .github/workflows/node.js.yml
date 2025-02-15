@@ -47,7 +47,7 @@ jobs:
       run: sleep 10  # Pause to ensure MongoDB is ready
       
     - name: Run application in background
-      run: npm start > server.log 2>&1 &
+      run: npm start &
 
     - name: Show application logs
       run: sleep 5 && cat server.log  # Check logs after a few seconds
