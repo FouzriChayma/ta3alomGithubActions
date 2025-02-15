@@ -1,3 +1,3 @@
 {
-    "url": "mongodb://mongodb:27017/myexam2025"
+    "url": "mongodb://localhost:27017/myexam2025"
 }
