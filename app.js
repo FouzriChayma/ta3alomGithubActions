@@ -65,3 +65,4 @@ mongo.connect(mongoConn.url)
   });
 
 console.log("apres la demande de connection dans le code ");
+module.exports = app;
