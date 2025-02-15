@@ -44,4 +44,4 @@ jobs:
     - name: Start Application
       env:
         MONGODB_URI: mongodb://localhost:27017/myexam2025
-      run: NODE_ENV=production npm start
+      run: NODE_ENV=production npm start &
