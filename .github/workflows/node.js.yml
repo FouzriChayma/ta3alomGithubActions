@@ -48,10 +48,10 @@ jobs:
     - name: Wait for MongoDB to be fully ready
       run: sleep 10  # Pause to ensure MongoDB is ready
 
-    - name: Kill processes using port 3000
+    - name: Kill processes using port 3003
       run: |
-        echo "Killing processes using port 3000..."
-        lsof -ti :3000 | xargs -r kill -9
+        echo "Killing processes using port 3003..."
+        lsof -ti :3003 | xargs -r kill -9
 
     - name: Run application in background
       run: npm start > server.log 2>&1 &
@@ -65,7 +65,7 @@ jobs:
     - name: Verify server is running
       run: |
         echo "Checking if server is running..."
-        curl --fail http://localhost:3000 || (echo "Server not responding" && cat server.log && exit 1)
+        curl --fail http://localhost:3003 || (echo "Server not responding" && cat server.log && exit 1)
 
     - name: Stop application
       run: pkill -f "node" || echo "No process found"
