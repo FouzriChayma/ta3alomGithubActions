@@ -1,53 +1,14 @@
 name: Node.js CI
-
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
+on: push
 jobs:
-  build:
+  
+  build-node:
     runs-on: ubuntu-latest
-    services:
-      mongodb:
-        image: mongo:5.0
-        ports:
-          - 27017:27017
-        options: >-
-          --health-cmd "mongo --eval 'db.runCommand({ ping: 1 })'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        
-    strategy:
-      matrix:
-        node-version: [20.17.0]
-
+    container: node:20.17.0
     steps:
-    - uses: actions/checkout@v4
-
-    - name: Cache node modules
-      uses: actions/cache@v3
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-
-    - run: npm ci
-    - name: Wait for MongoDB to be ready
-      run: |
-        while ! nc -zv localhost 27017; do
-          echo "Waiting for MongoDB..."
-          sleep 5
-        done
-        echo "MongoDB is ready"
-
-    - run: npm start
+  
+    - run: node --version
+    - run: npm --version
+    - uses: actions/checkout@v3
+    - run: npm install
+    - run: node app.js
