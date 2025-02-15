@@ -10,21 +10,39 @@ var bibliothequesRouter = require('./routes/bibliotheque')
 var livreRouter = require('./routes/livre')
 var app = express();
 
-//To connect to DB
+// To connect to DB
 var mongo = require("mongoose");
 var mongoConn = require("./config/database.json");
 
 console.log("avant la demande de connection dans le code ");
 
-mongo.connect(mongoConn.url).then(() => {
-  console.log("connected to db");
-}).catch(() => {
-  console.log("error connecting to db");
-});
+// Function to connect to MongoDB with retries
+const connectToDb = async () => {
+  let attempts = 0;
+  const maxAttempts = 10;
+  while (attempts < maxAttempts) {
+    try {
+      await mongo.connect(mongoConn.url);
 
-console.log("apres la demande de connection dans le code ");
+      console.log("connected to db");
+      break;
+    } catch (error) {
+      console.error("Error connecting to DB, retrying...");
+      attempts++;
+      if (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds before retrying
+      } else {
+        console.error("Failed to connect to DB after several attempts");
+        process.exit(1); // Exit the app if we fail to connect
+      }
+    }
+  }
+};
 
-//end connect
+// Call the connection function
+connectToDb();
+
+// end connect
 
 // Création du serveur HTTP
 const server = http.createServer(app);
@@ -42,7 +60,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/bibliotheque', bibliothequesRouter)
-app.use('/livre',livreRouter)
+app.use('/livre', livreRouter);
+
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
