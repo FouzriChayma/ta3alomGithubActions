@@ -8,11 +8,17 @@ jobs:
         image: mongo:latest
         ports:
           - 27017:27017
-        options: --health-cmd="mongosh --eval 'db.adminCommand(\"ping\")'" # to check if MongoDB is ready
+        options: --health-cmd="mongosh --eval 'db.adminCommand(\"ping\")'"  # Check if MongoDB is ready
 
     steps:
     - uses: actions/checkout@v3
     - run: node --version
     - run: npm --version
     - run: npm install
+    - name: Wait for MongoDB to be ready
+      run: |
+        until nc -zv localhost 27017; do
+          echo "Waiting for MongoDB to be ready..."
+          sleep 2
+        done
     - run: node app.js
