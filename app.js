@@ -47,13 +47,19 @@ mongoose.connect(mongoConn.url, { useNewUrlParser: true, useUnifiedTopology: tru
       res.render('error');
     });
 
-    // Création du serveur HTTP
-    const server = http.createServer(app);
-    const PORT = process.env.PORT || 3000;
+    // Création du serveur HTTP avec un délai pour MongoDB
+    setTimeout(() => {
+      const server = http.createServer(app);
+      const PORT = process.env.PORT || 3000;
 
-    server.listen(PORT, 'localhost', () => {
-      console.log(`Serveur en cours d'exécution sur http://localhost:${PORT}`);
-    });
+      server.listen(PORT, '0.0.0.0', () => {
+        console.log(`Serveur en cours d'exécution sur http://localhost:${PORT}`);
+      });
+
+      server.on('listening', () => {
+        console.log(`Le serveur écoute bien sur le port ${PORT}`);
+      });
+    }, 5000);
   })
   .catch(err => {
     console.error('Erreur de connexion à la base de données', err);
