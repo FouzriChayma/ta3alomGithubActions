@@ -54,4 +54,4 @@ jobs:
         echo "MongoDB is ready!"
 
     - name: Run application
-      run: npm start
+      run: npm start &
