@@ -10,11 +10,6 @@ jobs:
         image: mongo:latest
         ports:
           - 27017:27017
-        options: >
-          --health-cmd "mongo --eval 'db.runCommand({ ping: 1 })'"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
 
     steps:
     - uses: actions/checkout@v3
@@ -32,13 +27,12 @@ jobs:
         key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           node-modules-${{ runner.os }}-
-
     - name: Install dependencies
       if: steps.node-modules-cache.outputs.cache-hit != 'true'
       run: npm ci
 
-    - name: Install Express (Stable Version)
-      run: npm install express@4.18.2
+    - name: Update express
+      run: npm install express@5.0.1
 
     - name: Update mongoose
       run: npm update mongoose --depth 1
@@ -50,30 +44,19 @@ jobs:
       run: npm audit
 
     - name: Wait for MongoDB to be fully ready
-      run: |
-        echo "Waiting for MongoDB..."
-        until mongosh --eval 'db.runCommand({ ping: 1 })'; do
-          sleep 5
-          echo "Retrying..."
-        done
-        echo "MongoDB is ready!"
+      run: sleep 10  # Pause to ensure MongoDB is ready
+      
+    - name: Run application in background
+      run: npm start > server.log 2>&1 &
 
-    - name: Kill processes using port 3001
-      run: |
-        echo "Killing processes using port 3001..."
-        lsof -ti :3001 | xargs -r kill -9
-
-    - name: Run application
-      run: npm start &
+    - name: Show application logs
+      run: sleep 5 && cat server.log  # Check logs after a few seconds
 
     - name: Wait for server to be ready
-      run: sleep 10  # Adjust as needed
+      run: sleep 10  # Adjust based on your application's startup time
 
     - name: Verify server is running
       run: |
         echo "Checking if server is running..."
-        if ! curl --fail http://localhost:3001; then
-          echo "Server not responding, showing logs:"
-          cat server.log
-          exit 1
-        fi
+        curl --fail http://localhost:3001 || (echo "Server not responding" && cat server.log && exit 1)
+   
