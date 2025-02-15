@@ -4,6 +4,11 @@ jobs:
   
   build-node:
     runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
     container: node:20.17.0
     steps:
   
