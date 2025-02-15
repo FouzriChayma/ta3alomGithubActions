@@ -15,7 +15,7 @@ var app = express();
 
 console.log('Avant la demande de connexion à la base de données');
 
-mongoose.connect(mongoConn.url, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(mongoConn.url)
   .then(() => {
     console.log('Connecté à la base de données');
 
@@ -47,19 +47,17 @@ mongoose.connect(mongoConn.url, { useNewUrlParser: true, useUnifiedTopology: tru
       res.render('error');
     });
 
-    // Création du serveur HTTP avec un délai pour MongoDB
-    setTimeout(() => {
-      const server = http.createServer(app);
-      const PORT = process.env.PORT || 3000;
+    // Création du serveur HTTP
+    const PORT = process.env.PORT || 3000;
+    const server = http.createServer(app);
 
-      server.listen(PORT, '0.0.0.0', () => {
-        console.log(`Serveur en cours d'exécution sur http://localhost:${PORT}`);
-      });
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`Serveur en cours d'exécution sur http://localhost:${PORT}`);
+    });
 
-      server.on('listening', () => {
-        console.log(`Le serveur écoute bien sur le port ${PORT}`);
-      });
-    }, 5000);
+    server.on('listening', () => {
+      console.log(`Le serveur écoute bien sur le port ${PORT}`);
+    });
   })
   .catch(err => {
     console.error('Erreur de connexion à la base de données', err);
