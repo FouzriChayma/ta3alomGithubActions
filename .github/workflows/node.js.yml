@@ -1,45 +1,57 @@
 name: Node.js CI
 
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+on: [push]
 
 jobs:
-  build:
+  build-node:
     runs-on: ubuntu-latest
     services:
       mongodb:
-        image: mongo:5.0.30
+        image: mongo:latest
         ports:
           - 27017:27017
-        options: >-
-          --health-cmd "mongo --eval 'db.runCommand({ ping: 1 })'"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    strategy:
-      matrix:
-        node-version: [20.17.0]
+        options: --health-cmd="mongosh --eval 'db.adminCommand(\"ping\")'" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
 
-    - name: Cache node modules
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20' # Use Node.js 20
+
+    - name: Cache node_modules
       uses: actions/cache@v3
+      id: node-modules-cache
       with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+        path: node_modules
+        key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
-          ${{ runner.os }}-node-
+          node-modules-${{ runner.os }}-
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
+    - name: Install dependencies
+      if: steps.node-modules-cache.outputs.cache-hit != 'true'
+      run: npm ci
 
-    - run: npm ci
-    - run: NODE_ENV=production npm start
+    - name: Update express
+      run: npm install express@5.0.1
+
+    - name: Update mongoose
+      run: npm update mongoose --depth 1
+
+    - name: Fix vulnerabilities
+      run: npm audit fix
+
+    - name: Check for vulnerabilities
+      run: npm audit
+
+    - name: Wait for MongoDB to be ready
+      run: |
+        echo "Waiting for MongoDB to be ready..."
+        while ! nc -z localhost 27017; do
+          sleep 1
+        done
+        echo "MongoDB is ready!"
+
+    - name: Run application
+      run: npm start
