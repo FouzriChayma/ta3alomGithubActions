@@ -65,7 +65,8 @@ jobs:
     - name: Verify server is running
       run: |
         echo "Checking if server is running..."
-        curl --fail http://localhost:3003 || (echo "Server not responding" && cat server.log && exit 1)
+        curl --fail http://localhost:3001 || (echo "Server not responding" && cat server.log && exit 1)
+
 
     - name: Stop application
       run: pkill -f "node" || echo "No process found"
