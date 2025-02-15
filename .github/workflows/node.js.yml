@@ -10,7 +10,6 @@ jobs:
         image: mongo:latest
         ports:
           - 27017:27017
-        options: --health-cmd="mongosh --eval 'db.adminCommand(\"ping\")'" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
     - uses: actions/checkout@v3
@@ -28,7 +27,6 @@ jobs:
         key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           node-modules-${{ runner.os }}-
-
     - name: Install dependencies
       if: steps.node-modules-cache.outputs.cache-hit != 'true'
       run: npm ci
@@ -47,12 +45,7 @@ jobs:
 
     - name: Wait for MongoDB to be fully ready
       run: sleep 10  # Pause to ensure MongoDB is ready
-
-    - name: Kill processes using port 3001
-      run: |
-        echo "Killing processes using port 3001..."
-        lsof -ti :3001 | xargs -r kill -9
-
+      
     - name: Run application in background
       run: npm start > server.log 2>&1 &
 
@@ -66,7 +59,4 @@ jobs:
       run: |
         echo "Checking if server is running..."
         curl --fail http://localhost:3001 || (echo "Server not responding" && cat server.log && exit 1)
-
-
-    - name: Stop application
-      run: pkill -f "node" || echo "No process found"
+   
