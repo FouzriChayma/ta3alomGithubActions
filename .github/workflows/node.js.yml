@@ -22,7 +22,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.17.0]
+        node-version: [20]
 
     steps:
     - uses: actions/checkout@v4
@@ -43,7 +43,11 @@ jobs:
 
     - name: Install dependencies
       run: npm ci
+    - name: Update express
+      run: npm install express@5.0.1
 
+    - name: Update mongoose
+      run: npm update mongoose --depth 1
     - name: Wait for MongoDB
       run: |
         echo "Waiting for MongoDB to start..."
@@ -54,6 +58,4 @@ jobs:
         echo "MongoDB is up and running!"
 
     - name: Start Application
-      env:
-        MONGODB_URI: mongodb://localhost:27017/myexam2025
       run: NODE_ENV=production npm start &
