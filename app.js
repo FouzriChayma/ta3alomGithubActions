@@ -48,7 +48,7 @@ mongoose.connect(mongoConn.url)
     });
 
     // Création du serveur HTTP
-    const PORT = process.env.PORT || 3000;  // Use port 3000
+    const PORT = process.env.PORT || 3003;  // Use port 3003
     const server = http.createServer(app);
 
     server.listen(PORT, '0.0.0.0', () => {
