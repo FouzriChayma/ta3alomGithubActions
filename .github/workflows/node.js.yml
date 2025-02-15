@@ -23,11 +23,17 @@ jobs:
     - name: Install dependencies
       run: npm install
 
-    - name: Check for vulnerabilities
-      run: npm audit
+    - name: Update express
+      run: npm install express@5.0.1
+
+    - name: Update mongoose
+      run: npm update mongoose --depth 1
 
     - name: Fix vulnerabilities
       run: npm audit fix
+
+    - name: Check for vulnerabilities
+      run: npm audit
 
     - name: Wait for MongoDB to be ready
       run: |
