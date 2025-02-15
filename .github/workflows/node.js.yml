@@ -1,7 +1,6 @@
 name: Node.js CI
 on: push
 jobs:
-  
   build-node:
     runs-on: ubuntu-latest
     services:
@@ -9,11 +8,11 @@ jobs:
         image: mongo:latest
         ports:
           - 27017:27017
-    container: node:20.17.0
+        options: --health-cmd="mongosh --eval 'db.adminCommand(\"ping\")'" # to check if MongoDB is ready
+
     steps:
-  
+    - uses: actions/checkout@v3
     - run: node --version
     - run: npm --version
-    - uses: actions/checkout@v3
     - run: npm install
     - run: node app.js
