@@ -1,5 +1,7 @@
 name: Node.js CI
-on: push
+
+on: [push]
+
 jobs:
   build-node:
     runs-on: ubuntu-latest
@@ -8,17 +10,32 @@ jobs:
         image: mongo:latest
         ports:
           - 27017:27017
-        options: --health-cmd="mongosh --eval 'db.adminCommand(\"ping\")'"  # Check if MongoDB is ready
+        options: --health-cmd="mongosh --eval 'db.adminCommand(\"ping\")'" --health-interval=10s --health-timeout=5s --health-retries=5
 
     steps:
     - uses: actions/checkout@v3
-    - run: node --version
-    - run: npm --version
-    - run: npm install
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '14' # Specify your Node.js version
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Check for vulnerabilities
+      run: npm audit
+
+    - name: Fix vulnerabilities
+      run: npm audit fix
+
     - name: Wait for MongoDB to be ready
       run: |
-        until nc -zv localhost 27017; do
-          echo "Waiting for MongoDB to be ready..."
-          sleep 2
+        while ! nc -z localhost 27017; do
+          echo "Waiting for MongoDB..."
+          sleep 1
         done
-    - run: node app.js
+        echo "MongoDB is ready!"
+
+    - name: Run application
+      run: node app.js
