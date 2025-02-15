@@ -19,7 +19,7 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-       
+
     strategy:
       matrix:
         node-version: [20.17.0]
@@ -42,14 +42,4 @@ jobs:
         cache: 'npm'
 
     - run: npm ci
-
-    - name: Wait for MongoDB to be ready
-      run: |
-        echo "Waiting for MongoDB to start..."
-        until nc -zv mongodb 27017; do
-          echo "MongoDB not ready yet. Retrying..."
-          sleep 5
-        done
-        echo "MongoDB is ready"
-
     - run: NODE_ENV=production npm start
