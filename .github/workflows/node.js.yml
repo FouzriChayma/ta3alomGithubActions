@@ -1,62 +1,59 @@
-name: Node.js CI
+name: Node.js CI with MongoDB
 
-on: [push]
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
-  build-node:
+  build:
     runs-on: ubuntu-latest
     services:
       mongodb:
         image: mongo:latest
         ports:
           - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    strategy:
+      matrix:
+        node-version: [20.17.0]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20'
-
-    - name: Cache node_modules
+    - name: Cache node modules
       uses: actions/cache@v3
-      id: node-modules-cache
       with:
-        path: node_modules
-        key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+        path: ~/.npm
+        key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
-          node-modules-${{ runner.os }}-
+          ${{ runner.os }}-node-
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
     - name: Install dependencies
-      if: steps.node-modules-cache.outputs.cache-hit != 'true'
       run: npm ci
 
-    - name: Update express
-      run: npm install express@5.0.1
-
-    - name: Update mongoose
-      run: npm update mongoose --depth 1
-
-    - name: Fix vulnerabilities
-      run: npm audit fix
-
-    - name: Check for vulnerabilities
-      run: npm audit
-
-    - name: Wait for MongoDB to be fully ready
-      run: sleep 10  # Pause to ensure MongoDB is ready
-      
-    - name: Run application in background
-      run: npm start &
-
-    - name: Show application logs
-      run: sleep 5 && cat server.log  # Check logs after a few seconds
-
-    - name: Wait for server to be ready
-      run: sleep 10  # Adjust based on your application's startup time
-
-    - name: Verify server is running
+    - name: Wait for MongoDB
       run: |
-        echo "Checking if server is running..."
-        curl --fail http://localhost:3001 || (echo "Server not responding" && cat server.log && exit 1)
-   
+        echo "Waiting for MongoDB to start..."
+        until nc -z mongodb 27017; do
+          echo "Waiting for MongoDB..."
+          sleep 5
+        done
+        echo "MongoDB is up and running!"
+
+    - name: Start Application
+      env:
+        MONGODB_URI: mongodb://mongodb:27017/myexam2025
+      run: NODE_ENV=production npm start
