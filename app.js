@@ -16,14 +16,18 @@ var mongoConn = require("./config/database.json");
 
 console.log("avant la demande de connection dans le code");
 
-mongo.connect(mongoConn.url)
+// Connect to MongoDB
+mongo.connect(mongoConn.url, {
+  useNewUrlParser: true, // Fix deprecated warning
+  useUnifiedTopology: true, // Fix deprecated warning
+})
   .then(() => {
     console.log("connected to db");
 
-    // Only create server and start listening after DB connection is successful
+    // Set up the server only after DB connection is successful
     const server = http.createServer(app);
 
-    // view engine setup
+    // View engine setup
     app.set('views', path.join(__dirname, 'views'));
     app.set('view engine', 'twig');
 
@@ -33,36 +37,38 @@ mongo.connect(mongoConn.url)
     app.use(cookieParser());
     app.use(express.static(path.join(__dirname, 'public')));
 
+    // Define routes
     app.use('/', indexRouter);
     app.use('/users', usersRouter);
     app.use('/bibliotheque', bibliothequesRouter);
     app.use('/livre', livreRouter);
 
-    // catch 404 and forward to error handler
+    // Catch 404 errors and forward to error handler
     app.use(function(req, res, next) {
       next(createError(404));
     });
 
-    // error handler
+    // Error handler
     app.use(function(err, req, res, next) {
-      // set locals, only providing error in development
       res.locals.message = err.message;
       res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-      // render the error page
       res.status(err.status || 500);
       res.render('error');
     });
 
-    // Start the server now that MongoDB is connected
-    server.listen(3000, () => {
-      console.log('Server is running on port 3000');
+    // Start the server after DB connection is established
+    server.listen(process.env.PORT || 3000, () => {
+      console.log('Server is running on port ' + (process.env.PORT || 3000));
     });
 
   })
   .catch((err) => {
-    console.log("error connecting to db", err);
+    console.log("Error connecting to DB: ", err);
+    // Consider adding a process exit after a DB failure
+    process.exit(1);
   });
 
-console.log("apres la demande de connection dans le code ");
+console.log("apres la demande de connection dans le code");
+
 module.exports = app;
