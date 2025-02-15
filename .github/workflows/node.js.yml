@@ -37,4 +37,11 @@ jobs:
         cache: 'npm'
 
     - run: npm ci
+    - name: Wait for MongoDB to be ready
+      run: |
+        while ! nc -zv localhost 27017; do
+          echo "Waiting for MongoDB..."
+          sleep 5
+        done
+        echo "MongoDB is ready"
     - run: NODE_ENV=production npm start
