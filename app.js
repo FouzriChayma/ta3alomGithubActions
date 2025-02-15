@@ -3,31 +3,23 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-const http = require("http");
+const http = require('http');
+var mongoose = require('mongoose');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var bibliothequesRouter = require('./routes/bibliotheque');
 var livreRouter = require('./routes/livre');
+var mongoConn = require('./config/database.json');
+
 var app = express();
 
-// To connect to DB
-var mongo = require("mongoose");
-var mongoConn = require("./config/database.json");
+console.log('Avant la demande de connexion à la base de données');
 
-console.log("avant la demande de connection dans le code");
-
-// Connect to MongoDB
-mongo.connect(mongoConn.url, {
-  useNewUrlParser: true, // Fix deprecated warning
-  useUnifiedTopology: true, // Fix deprecated warning
-})
+mongoose.connect(mongoConn.url, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
-    console.log("connected to db");
+    console.log('Connecté à la base de données');
 
-    // Set up the server only after DB connection is successful
-    const server = http.createServer(app);
-
-    // View engine setup
+    // Configuration d'Express
     app.set('views', path.join(__dirname, 'views'));
     app.set('view engine', 'twig');
 
@@ -37,38 +29,37 @@ mongo.connect(mongoConn.url, {
     app.use(cookieParser());
     app.use(express.static(path.join(__dirname, 'public')));
 
-    // Define routes
     app.use('/', indexRouter);
     app.use('/users', usersRouter);
     app.use('/bibliotheque', bibliothequesRouter);
     app.use('/livre', livreRouter);
 
-    // Catch 404 errors and forward to error handler
-    app.use(function(req, res, next) {
+    // Gestion des erreurs 404
+    app.use((req, res, next) => {
       next(createError(404));
     });
 
-    // Error handler
-    app.use(function(err, req, res, next) {
+    // Gestion des erreurs générales
+    app.use((err, req, res, next) => {
       res.locals.message = err.message;
       res.locals.error = req.app.get('env') === 'development' ? err : {};
-
       res.status(err.status || 500);
       res.render('error');
     });
 
-    // Start the server after DB connection is established
-    server.listen(process.env.PORT || 3000, () => {
-      console.log('Server is running on port ' + (process.env.PORT || 3000));
-    });
+    // Création du serveur HTTP
+    const server = http.createServer(app);
+    const PORT = process.env.PORT || 3000;
 
+    server.listen(PORT, 'localhost', () => {
+      console.log(`Serveur en cours d'exécution sur http://localhost:${PORT}`);
+    });
   })
-  .catch((err) => {
-    console.log("Error connecting to DB: ", err);
-    // Consider adding a process exit after a DB failure
-    process.exit(1);
+  .catch(err => {
+    console.error('Erreur de connexion à la base de données', err);
+    process.exit(1); // Quitter en cas d'échec de connexion
   });
 
-console.log("apres la demande de connection dans le code");
+console.log('Après la demande de connexion à la base de données');
 
 module.exports = app;
